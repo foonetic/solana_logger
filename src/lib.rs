@@ -1,20 +1,20 @@
 //! `solana_logger` defines a collection of logging macros that are enabled and
-//! disabled at compile time. 
-//! 
+//! disabled at compile time.
+//!
 //! The user must build with feature `loglevel_{level}` to enable logging at or
 //! above that level. For example, `loglevel_info` will enable ingo, warn, and
-//! error logs but disable debug logs. 
-//! 
+//! error logs but disable debug logs.
+//!
 //! Usage example:
-//! 
+//!
 //! ```rust
-//! 
+//!
 //! use solana_logger::{debug, info};
-//! 
+//!
 //! debug!("This is a debug message!");
-//! info!("This is an info message"); 
+//! info!("This is an info message");
 //! ```
-//! 
+//!
 //! The logging macros support the same string formatting as `solana_program::msg`.
 
 /// Represents a logging level. Levels are ordered from least to most important
@@ -60,14 +60,10 @@ macro_rules! log {
         concat!("[", file!(), ":", line!(), " ", $label, "] ", $fmt)
     };
     ($level: expr, $label: expr, $fmt:expr, $($opt:expr),*) => {
-        if $crate::level() <= $level {
-            solana_program::msg!($crate::log!(prefix $label, $fmt), $($opt),*);
-        }
+		solana_program::msg!($crate::log!(prefix $label, $fmt), $($opt),*);
     };
     ($level: expr, $label: expr, $opt:expr) => {
-        if $crate::level() <= $level {
-            solana_program::msg!($crate::log!(prefix $label, "{}"), $opt);
-        } 
+		solana_program::msg!($crate::log!(prefix $label, "{}"), $opt);
     };
 }
 
@@ -75,6 +71,7 @@ macro_rules! log {
 #[macro_export]
 macro_rules! debug {
     ($($opt:expr),*) => {
+		#[cfg(feature = "loglevel_debug")]
         $crate::log!($crate::Level::Debug, "DEBUG", $($opt),*);
     };
 }
@@ -83,6 +80,7 @@ macro_rules! debug {
 #[macro_export]
 macro_rules! info {
     ($($opt:expr),*) => {
+		#[cfg(feature = "loglevel_info")]
         $crate::log!($crate::Level::Info, "INFO", $($opt),*);
     };
 }
@@ -91,6 +89,7 @@ macro_rules! info {
 #[macro_export]
 macro_rules! warn {
     ($($opt:expr),*) => {
+		#[cfg(feature = "loglevel_warn")]
         $crate::log!($crate::Level::Warn, "WARN", $($opt),*);
     };
 }
@@ -99,6 +98,7 @@ macro_rules! warn {
 #[macro_export]
 macro_rules! error {
     ($($opt:expr),*) => {
+		#[cfg(feature = "loglevel_error")]
         $crate::log!($crate::Level::Error, "ERROR", $($opt),*);
     };
 }
