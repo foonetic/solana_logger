@@ -9,7 +9,7 @@ edition = "2021"
 solana-program = "1.6.1"
 
 [features]
-loglevel_debug = []
-loglevel_info = []
-loglevel_warn = []
+loglevel_debug = ["loglevel_info", "loglevel_warn", "loglevel_error"]
+loglevel_info = ["loglevel_warn", "loglevel_error"]
+loglevel_warn = ["loglevel_error"]
 loglevel_error = []
