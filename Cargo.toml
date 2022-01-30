@@ -7,3 +7,9 @@ edition = "2021"
 
 [dependencies]
 solana-program = "1.6.1"
+
+[features]
+loglevel_debug = []
+loglevel_info = []
+loglevel_warn = []
+loglevel_error = []

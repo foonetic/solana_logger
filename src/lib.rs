@@ -1,19 +1,18 @@
 //! `solana_logger` defines a collection of logging macros that are enabled and
 //! disabled at compile time. 
 //! 
-//! The user is responsible for calling `set_log_level` for each module in which
-//! logging is enabled. `debug`, `info`, `warn`, and `error` macros will then be
-//! enabled if and only if the corresponding level is at least the set level.
+//! The user must build with feature `loglevel_{level}` to enable logging at or
+//! above that level. For example, `loglevel_info` will enable ingo, warn, and
+//! error logs but disable debug logs. 
 //! 
-//! For example:
+//! Usage example:
 //! 
 //! ```rust
 //! 
-//! // Only Info, Warn, and Error will be printed.
-//! set_log_level!(Info);
+//! use solana_logger::{debug, info};
 //! 
-//! debug!("This will be skipped");
-//! info!("This will be printed"); 
+//! debug!("This is a debug message!");
+//! info!("This is an info message"); 
 //! ```
 //! 
 //! The logging macros support the same string formatting as `solana_program::msg`.
@@ -27,8 +26,30 @@ pub enum Level {
     Warn,
     Error,
 
-    /// Set the `Disabled` logging level to disable all logging.
+    /// Set the `Disabled` logging level to disable all logging. This is the
+    /// default level.
     Disabled,
+}
+
+/// Returns the configured log level.
+pub fn level() -> Level {
+    if cfg!(feature = "loglevel_debug") {
+        return Level::Debug;
+    }
+
+    if cfg!(feature = "loglevel_info") {
+        return Level::Info;
+    }
+
+    if cfg!(feature = "loglevel_warn") {
+        return Level::Warn;
+    }
+
+    if cfg!(feature = "loglevel_error") {
+        return Level::Error;
+    }
+
+    return Level::Disabled;
 }
 
 /// Conditionally logs a message. Users should prefer one of the predefined
@@ -39,12 +60,12 @@ macro_rules! log {
         concat!("[", file!(), ":", line!(), " ", $label, "] ", $fmt)
     };
     ($level: expr, $label: expr, $fmt:expr, $($opt:expr),*) => {
-        if self::SolanaLoggerLogLevel::level() <= $level {
+        if $crate::level() <= $level {
             solana_program::msg!($crate::log!(prefix $label, $fmt), $($opt),*);
         }
     };
     ($level: expr, $label: expr, $opt:expr) => {
-        if self::SolanaLoggerLogLevel::level() <= $level {
+        if $crate::level() <= $level {
             solana_program::msg!($crate::log!(prefix $label, "{}"), $opt);
         } 
     };
@@ -82,24 +103,8 @@ macro_rules! error {
     };
 }
 
-/// Sets the log level for the current module.
-#[macro_export]
-macro_rules! set_log_level {
-    ($level: expr) => {
-        struct SolanaLoggerLogLevel;
-
-        impl SolanaLoggerLogLevel {
-            pub fn level() -> $crate::Level {
-                $level
-            }
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    set_log_level!(crate::Level::Warn);
-
     #[test]
     fn ignore_info() {
         info!("should not display");
